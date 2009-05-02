@@ -22,7 +22,7 @@
 Photo::Photo(const QString &path)
   : m_gpsLat(-1), m_gpsLong(-1), m_filename(path) 
 {
-  Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(path.toStdString());
+  Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(QFile::encodeName(path).constData());
   image->readMetadata();
   Exiv2::ExifData &exifData = image->exifData();
  
