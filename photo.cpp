@@ -18,6 +18,7 @@
 */
 
 #include "photo.h"
+#include <QFile>
 
 Photo::Photo(const QString &path)
   : m_gpsLat(-1), m_gpsLong(-1), m_filename(path) 
