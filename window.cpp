@@ -26,6 +26,9 @@ Window::Window(QWidget *parent)
 
   ui.lv_photos->setIconSize(QSize(60, 60));
   m_marble = new TrippyMarbleWidget(this);
+  QSizePolicy marblePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  marblePolicy.setHorizontalStretch(3);
+  m_marble->setSizePolicy(marblePolicy);
 
   //Needed to fetch missing tiles. Hope it's alright to use this KDE hosted one...
   m_marble->setDownloadUrl( "http://download.kde.org/apps/marble/" );
@@ -36,7 +39,7 @@ Window::Window(QWidget *parent)
   ui.actionMercator->trigger();
   mercatorClicked();
 
-  ui.verticalLayout->addWidget(m_marble);
+  ui.centralLayout->addWidget(m_marble);
   
   m_fileDialog = new QFileDialog(this, "Select geo-tagged images");
   m_fileDialog->setNameFilter("Image Files (*.jpg)");

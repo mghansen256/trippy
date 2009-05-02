@@ -1,7 +1,8 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <class>window</class>
- <widget class="QMainWindow" name="window" >
-  <property name="geometry" >
+ <widget class="QMainWindow" name="window">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
@@ -9,64 +10,56 @@
     <height>747</height>
    </rect>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>Trippy</string>
   </property>
-  <widget class="QWidget" name="centralwidget" >
-   <property name="geometry" >
-    <rect>
-     <x>0</x>
-     <y>31</y>
-     <width>985</width>
-     <height>688</height>
-    </rect>
-   </property>
-   <layout class="QFormLayout" name="formLayout" >
-    <item row="0" column="0" >
-     <layout class="QVBoxLayout" name="verticalLayout2" >
-      <property name="sizeConstraint" >
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="centralLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout2">
+      <property name="sizeConstraint">
        <enum>QLayout::SetNoConstraint</enum>
       </property>
       <item>
-       <widget class="QLabel" name="l_photo" >
-        <property name="minimumSize" >
+       <widget class="QLabel" name="l_photo">
+        <property name="minimumSize">
          <size>
           <width>280</width>
           <height>280</height>
          </size>
         </property>
-        <property name="maximumSize" >
+        <property name="maximumSize">
          <size>
           <width>280</width>
           <height>280</height>
          </size>
         </property>
-        <property name="text" >
+        <property name="text">
          <string/>
         </property>
-        <property name="pixmap" >
+        <property name="pixmap">
          <pixmap>picture.jpg</pixmap>
         </property>
        </widget>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout" >
+       <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="QPushButton" name="pb_back" >
-          <property name="enabled" >
+         <widget class="QPushButton" name="pb_back">
+          <property name="enabled">
            <bool>false</bool>
           </property>
-          <property name="text" >
+          <property name="text">
            <string>&amp;Back</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pb_next" >
-          <property name="enabled" >
+         <widget class="QPushButton" name="pb_next">
+          <property name="enabled">
            <bool>false</bool>
           </property>
-          <property name="text" >
+          <property name="text">
            <string>&amp;Next</string>
           </property>
          </widget>
@@ -74,8 +67,8 @@
        </layout>
       </item>
       <item>
-       <widget class="QListView" name="lv_photos" >
-        <property name="minimumSize" >
+       <widget class="QListView" name="lv_photos">
+        <property name="minimumSize">
          <size>
           <width>0</width>
           <height>320</height>
@@ -84,106 +77,94 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pb_addPhotos" >
-        <property name="maximumSize" >
+       <widget class="QPushButton" name="pb_addPhotos">
+        <property name="maximumSize">
          <size>
           <width>640</width>
           <height>16777215</height>
          </size>
         </property>
-        <property name="text" >
+        <property name="text">
          <string>&amp;Add Photos</string>
         </property>
        </widget>
       </item>
      </layout>
     </item>
-    <item row="0" column="1" >
-     <layout class="QVBoxLayout" name="verticalLayout" />
-    </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menubar" >
-   <property name="geometry" >
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
      <width>985</width>
-     <height>31</height>
+     <height>25</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu_Photos" >
-    <property name="title" >
+   <widget class="QMenu" name="menu_Photos">
+    <property name="title">
      <string>&amp;Photos</string>
     </property>
-    <addaction name="action_Add_Photos" />
+    <addaction name="action_Add_Photos"/>
    </widget>
-   <widget class="QMenu" name="menu_Map" >
-    <property name="title" >
+   <widget class="QMenu" name="menu_Map">
+    <property name="title">
      <string>&amp;Map</string>
     </property>
-    <addaction name="actionAtlas" />
-    <addaction name="actionOpen_Street_Map" />
-    <addaction name="separator" />
-    <addaction name="actionFlat" />
-    <addaction name="actionMercator" />
-    <addaction name="actionGlobe" />
+    <addaction name="actionAtlas"/>
+    <addaction name="actionOpen_Street_Map"/>
+    <addaction name="separator"/>
+    <addaction name="actionFlat"/>
+    <addaction name="actionMercator"/>
+    <addaction name="actionGlobe"/>
    </widget>
-   <addaction name="menu_Photos" />
-   <addaction name="menu_Map" />
+   <addaction name="menu_Photos"/>
+   <addaction name="menu_Map"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar" >
-   <property name="geometry" >
-    <rect>
-     <x>0</x>
-     <y>719</y>
-     <width>985</width>
-     <height>28</height>
-    </rect>
-   </property>
-  </widget>
-  <action name="action_Add_Photos" >
-   <property name="text" >
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="action_Add_Photos">
+   <property name="text">
     <string>&amp;Add Photos</string>
    </property>
   </action>
-  <action name="actionAtlas" >
-   <property name="checkable" >
+  <action name="actionAtlas">
+   <property name="checkable">
     <bool>true</bool>
    </property>
-   <property name="text" >
+   <property name="text">
     <string>Atlas Map</string>
    </property>
   </action>
-  <action name="actionOpen_Street_Map" >
-   <property name="checkable" >
+  <action name="actionOpen_Street_Map">
+   <property name="checkable">
     <bool>true</bool>
    </property>
-   <property name="text" >
+   <property name="text">
     <string>Open Street Map</string>
    </property>
   </action>
-  <action name="actionFlat" >
-   <property name="checkable" >
+  <action name="actionFlat">
+   <property name="checkable">
     <bool>true</bool>
    </property>
-   <property name="text" >
+   <property name="text">
     <string>Flat Projection</string>
    </property>
   </action>
-  <action name="actionMercator" >
-   <property name="checkable" >
+  <action name="actionMercator">
+   <property name="checkable">
     <bool>true</bool>
    </property>
-   <property name="text" >
+   <property name="text">
     <string>Mercator Projection</string>
    </property>
   </action>
-  <action name="actionGlobe" >
-   <property name="checkable" >
+  <action name="actionGlobe">
+   <property name="checkable">
     <bool>true</bool>
    </property>
-   <property name="text" >
+   <property name="text">
     <string>Globe Projection</string>
    </property>
   </action>
