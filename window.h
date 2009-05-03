@@ -46,7 +46,9 @@ class Window : public QMainWindow
 
   private:
     QFileDialog *m_fileDialog;
-    QStandardItem *m_previousItem; 
+    QStandardItem *m_previousItem;
+    QActionGroup *m_actionGroupMap;
+    QActionGroup *m_actionGroupProjection;
  
   private slots:
     void selectFile();
@@ -57,11 +59,11 @@ class Window : public QMainWindow
     //Buttons/Menu items
     void backClicked();
     void nextClicked();
-    void atlasClicked();
-    void openStreetMapClicked();
-    void mercatorClicked();
-    void flatClicked();
-    void globeClicked();
+    void mapActionTriggered(QAction *action);
+    void projectionActionTriggered(QAction *action);
+
+  protected:
+    virtual void closeEvent(QCloseEvent *event);
   
   signals:  
     void selectedFiles(const QStringList &files);

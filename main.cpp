@@ -22,6 +22,8 @@
 
 int main(int argc, char* argv[])
 {
+  QCoreApplication::setApplicationName("trippy");
+
   QApplication app(argc, argv);
   Trippy trippy;
   return app.exec();

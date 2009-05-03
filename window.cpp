@@ -33,17 +33,57 @@ Window::Window(QWidget *parent)
   //Needed to fetch missing tiles. Hope it's alright to use this KDE hosted one...
   m_marble->setDownloadUrl( "http://download.kde.org/apps/marble/" );
 
-  //Default view for now is mercator and Atlas, since they're my favorite at the moment.
-  ui.actionAtlas->trigger();
-  atlasClicked();
-  ui.actionMercator->trigger();
-  mercatorClicked();
+  //make the actions exclusive (we have to do this here since it can not be done in the UI-editor):
+  m_actionGroupMap = new QActionGroup(this);
+  m_actionGroupMap->addAction(ui.actionAtlas);
+  m_actionGroupMap->addAction(ui.actionOpen_Street_Map);
+  m_actionGroupMap->setExclusive(true);
+
+  m_actionGroupProjection = new QActionGroup(this);
+  m_actionGroupProjection->addAction(ui.actionFlat);
+  m_actionGroupProjection->addAction(ui.actionMercator);
+  m_actionGroupProjection->addAction(ui.actionGlobe);
+  m_actionGroupProjection->setExclusive(true);
 
   ui.centralLayout->addWidget(m_marble);
   
   m_fileDialog = new QFileDialog(this, "Select geo-tagged images");
   m_fileDialog->setNameFilter("Image Files (*.jpg)");
   m_fileDialog->setFileMode(QFileDialog::ExistingFiles);  
+
+  // load the settings:
+  QSettings appSettings;
+  ui.actionZoomOnSelectedPhoto->setChecked(appSettings.value(QLatin1String("ZoomOnSelectedPhoto"), true).toBool());
+  m_fileDialog->restoreState(appSettings.value(QLatin1String("AddPhotosState")).toByteArray());
+  const int setting_map = appSettings.value(QLatin1String("MapType"), 0).toInt();
+  switch (setting_map)
+  {
+      case 0:
+      default:
+        ui.actionAtlas->setChecked(true);
+        break;
+      case 1:
+        ui.actionOpen_Street_Map->setChecked(true);
+        break;
+  }
+  const int setting_projection = appSettings.value(QLatin1String("ProjectionType"), 1).toInt();
+  switch (setting_projection)
+  {
+      case 0:
+        ui.actionFlat->setChecked(true);
+        break;
+      default:
+      case 1:
+        ui.actionMercator->setChecked(true);
+        break;
+      case 2:
+        ui.actionGlobe->setChecked(true);
+        break;
+  }
+
+  // cause the checked actions to be applied:
+  mapActionTriggered(0);
+  projectionActionTriggered(0);
 
   m_previousItem = new QStandardItem;
 
@@ -52,11 +92,8 @@ Window::Window(QWidget *parent)
   QObject::connect(ui.action_Add_Photos, SIGNAL(triggered()), this, SLOT(selectFile()));
 
   //Menubar items:
-  QObject::connect(ui.actionAtlas, SIGNAL(triggered()), this, SLOT(atlasClicked()));
-  QObject::connect(ui.actionOpen_Street_Map, SIGNAL(triggered()), this, SLOT(openStreetMapClicked()));
-  QObject::connect(ui.actionFlat, SIGNAL(triggered()), this, SLOT(flatClicked()));
-  QObject::connect(ui.actionMercator, SIGNAL(triggered()), this, SLOT(mercatorClicked()));
-  QObject::connect(ui.actionGlobe, SIGNAL(triggered()), this, SLOT(globeClicked()));
+  QObject::connect(m_actionGroupMap, SIGNAL(triggered(QAction*)), this, SLOT(mapActionTriggered(QAction*)));
+  QObject::connect(m_actionGroupProjection, SIGNAL(triggered(QAction*)), this, SLOT(projectionActionTriggered(QAction*)));
 
   //Files selected from the file dialog
   QObject::connect(m_fileDialog, SIGNAL(filesSelected(const QStringList &)), this, SLOT(filesSelected(const QStringList &)));
@@ -159,46 +196,79 @@ void Window::centerMapOn(Photo *photo)
 {
   ui.l_photo->setPixmap(photo->getThumbnail()); 
   m_marble->centerOn(photo->getGpsLong(), photo->getGpsLat());
-  m_marble->zoomView(3000);
+  if (ui.actionZoomOnSelectedPhoto->isChecked())
+  {
+    m_marble->zoomView(3000);
+  }
 }
 
-
-void Window::atlasClicked()
+void Window::mapActionTriggered(QAction *action)
 {
-  m_marble->setMapThemeId(QLatin1String("earth/srtm/srtm.dgml"));
-  ui.actionAtlas->setChecked(true);
-  ui.actionOpen_Street_Map->setChecked(false);
+  Q_UNUSED(action);
+
+  if (ui.actionAtlas->isChecked())
+  {
+    m_marble->setMapThemeId(QLatin1String("earth/srtm/srtm.dgml"));
+  }
+  else if (ui.actionOpen_Street_Map->isChecked())
+  {
+    m_marble->setMapThemeId(QLatin1String("earth/openstreetmap/openstreetmap.dgml"));
+  }
   hideMapClutter();
 }
 
-void Window::openStreetMapClicked()
+void Window::projectionActionTriggered(QAction *action)
 {
-  m_marble->setMapThemeId(QLatin1String("earth/openstreetmap/openstreetmap.dgml"));
-  ui.actionOpen_Street_Map->setChecked(true);
-  ui.actionAtlas->setChecked(false);
-  hideMapClutter();
+    Q_UNUSED(action);
+
+    if (ui.actionFlat->isChecked())
+    {
+      m_marble->setProjection(Equirectangular);
+    }
+    else if (ui.actionMercator->isChecked())
+    {
+      m_marble->setProjection(Mercator);
+    }
+    else if (ui.actionGlobe->isChecked())
+    {
+      m_marble->setProjection(Spherical);
+    }
 }
 
-void Window::mercatorClicked()
+void Window::closeEvent(QCloseEvent *event)
 {
-  m_marble->setProjection(Mercator);
-  ui.actionMercator->setChecked(true);
-  ui.actionGlobe->setChecked(false);
-  ui.actionFlat->setChecked(false);
-}
+  // save the settings:
+  QSettings appSettings;
 
-void Window::flatClicked()
-{
-  m_marble->setProjection(Equirectangular);
-  ui.actionFlat->setChecked(true);
-  ui.actionGlobe->setChecked(false);
-  ui.actionMercator->setChecked(false);
-}
+  appSettings.setValue(QLatin1String("ZoomOnSelectedPhoto"), ui.actionZoomOnSelectedPhoto->isChecked());
 
-void Window::globeClicked()
-{
-  m_marble->setProjection(Spherical);
-  ui.actionGlobe->setChecked(true);
-  ui.actionMercator->setChecked(false);
-  ui.actionFlat->setChecked(false);
+  int projection_value = 0;
+  if (ui.actionFlat->isChecked())
+  {
+    projection_value = 0;
+  }
+  else if (ui.actionMercator->isChecked())
+  {
+    projection_value = 1;
+  }
+  else if (ui.actionGlobe->isChecked())
+  {
+    projection_value = 2;
+  }
+  appSettings.setValue(QLatin1String("ProjectionType"), projection_value);
+
+  int map_value = 0;
+  if (ui.actionAtlas->isChecked())
+  {
+    map_value = 0;
+  }
+  else if (ui.actionOpen_Street_Map->isChecked())
+  {
+    map_value = 1;
+  }
+  appSettings.setValue(QLatin1String("MapType"), map_value);
+
+  appSettings.setValue(QLatin1String("AddPhotosState"), m_fileDialog->saveState());
+
+  event->accept();
 }

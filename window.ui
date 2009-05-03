@@ -118,6 +118,8 @@
     <addaction name="actionFlat"/>
     <addaction name="actionMercator"/>
     <addaction name="actionGlobe"/>
+    <addaction name="separator"/>
+    <addaction name="actionZoomOnSelectedPhoto"/>
    </widget>
    <addaction name="menu_Photos"/>
    <addaction name="menu_Map"/>
@@ -166,6 +168,17 @@
    </property>
    <property name="text">
     <string>Globe Projection</string>
+   </property>
+  </action>
+  <action name="actionZoomOnSelectedPhoto">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Zoom on selection</string>
+   </property>
+   <property name="toolTip">
+    <string>Zoom in when a photo is selected</string>
    </property>
   </action>
  </widget>
