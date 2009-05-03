@@ -25,6 +25,8 @@
 #include <QPixmap>
 #include <QDateTime>
 #include <QDebug>
+#include <QImage>
+#include <QIcon>
 
 #include <exiv2/image.hpp>
 #include <exiv2/exif.hpp>
@@ -36,22 +38,26 @@ class Photo
 {
   public:
     Photo(const QString &path = 0);
-    bool isGeoTagged();
-    QPixmap getImage();
-    QPixmap getThumbnail();
-    qreal getGpsLat();
-    qreal getGpsLong();
-    QDateTime getTimestamp();
-    QString getFilename();
+    inline bool isGeoTagged() const { return ((m_gpsLat != -1) && (m_gpsLong != -1)); }
+    QImage getImage() const;
+    QPixmap getPixmap() const;
+    QImage getThumbnailImage() const;
+    QPixmap getThumbnailPixmap() const;
+    inline QIcon getIcon() const { return QIcon(getThumbnailPixmap()); }
+    inline qreal getGpsLat() const { return m_gpsLat; }
+    inline qreal getGpsLong() const { return m_gpsLong; }
+    inline QDateTime getTimestamp() const { return m_timestamp; }
+    inline QString getFilename() const { return m_filename; }
 
   private:
-    bool exivHasKey(QString key, Exiv2::ExifData &data);
-    qreal convertToCoordinate(QString coord, QString ref);
+    static bool exivHasKey(const QString &key, Exiv2::ExifData &data);
+    static qreal convertToCoordinate(const QString &coord, const QString &ref);
 
     QDateTime m_timestamp;
     qreal m_gpsLat;
     qreal m_gpsLong;
     QString m_filename;
+    mutable QImage m_thumbnail;
 };
 
 Q_DECLARE_METATYPE(Photo)

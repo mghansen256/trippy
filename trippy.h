@@ -35,14 +35,25 @@ class Trippy : public QObject
 
   private:
     Window *m_window;
-    LoadScreen *m_loadScreen;
     QFileDialog *m_fileDialog;
     QStandardItemModel m_photos;
+    QFutureWatcher<QString> *m_watcher;
 
   private slots:
     void filesSelected(const QStringList &files);
     void addPhoto(Photo photo);
     void sortPhotos();
+
+  public slots:
+    void photoReadyFromConcurrent(Photo photo);
+    void photoFailedFromConcurrent(Photo photo);
+    void photoLoadingFromConcurrent(QString filename);
+
+  signals:
+    void photoReady(Photo photo);
+    void photoLoading(QString filename);
+    void photoFailed(Photo photo);
+    void photoFailed(QString filename);
 };
 
 #endif

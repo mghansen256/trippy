@@ -17,7 +17,6 @@
     along with Trippy.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <QtGui>
 #include "trippy.h"
 
 int main(int argc, char* argv[])

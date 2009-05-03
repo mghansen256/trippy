@@ -75,48 +75,36 @@ Photo::Photo(const QString &path)
                 "yyyy:MM:dd HH:mm:ss");
 }
 
-bool Photo::exivHasKey(QString key, Exiv2::ExifData &data)
+bool Photo::exivHasKey(const QString &key, Exiv2::ExifData &data)
 {
   Exiv2::ExifData::iterator pos = data.findKey(Exiv2::ExifKey(key.toStdString()));
   return (pos != data.end());
 }
 
-qreal Photo::getGpsLong()
+QImage Photo::getThumbnailImage() const
 {
-  return m_gpsLong;
+  if (m_thumbnail.width()==0)
+    m_thumbnail = getImage().scaled(QSize(280, 280), Qt::KeepAspectRatio);
+
+  return m_thumbnail;
 }
 
-qreal Photo::getGpsLat()
+QPixmap Photo::getThumbnailPixmap() const
 {
-  return m_gpsLat;
+  return QPixmap::fromImage(getThumbnailImage());
 }
 
-QPixmap Photo::getThumbnail()
-{
-  return getImage().scaled(QSize(280, 280), Qt::KeepAspectRatio);
-}
-
-QPixmap Photo::getImage()
+QPixmap Photo::getPixmap() const
 {
   return QPixmap(m_filename);
 }
 
-QDateTime Photo::getTimestamp()
+QImage Photo::getImage() const
 {
-  return m_timestamp;
+  return QImage(m_filename);
 }
 
-bool Photo::isGeoTagged()
-{
-  return ((m_gpsLat != -1) && (m_gpsLong != -1));
-}
-
-QString Photo::getFilename()
-{
-  return m_filename;
-}
-
-qreal Photo::convertToCoordinate(QString coord, QString ref)
+qreal Photo::convertToCoordinate(const QString &coord, const QString &ref)
 {
   /*
   *Format comes in as "59/1 56/1 1288/100" and "E"

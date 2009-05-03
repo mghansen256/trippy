@@ -20,20 +20,35 @@
 #ifndef LOADSCREEN_H
 #define LOADSCREEN_H
 
-#include <QtGui>
-
+#include <QDialog>
+#include <QFutureWatcher>
 #include "ui_loadscreen.h"
 
 class LoadScreen : public QDialog
 {
   Q_OBJECT
   public:
-    LoadScreen(QWidget *parent=0);
+    LoadScreen(QWidget *parent, QFutureWatcher<QString> *watcher);
+
+  private:
+    Ui::loadScreen ui;
+    QFutureWatcher<QString> *m_watcher;
+    bool m_canceled;
+
+  public slots:
     void showFailedPhotos(bool show);
     void clearFailedPhotos();
+    void setProgressRange(int minimum, int maximum);
+    void setProgressValue(int value);
+    void setProgressText(QString text);
+    void addFailedPhoto(QString filename);
+    void finished();
+    void canceled();
+    void showCancel(const bool show);
 
-    Ui::loadScreen ui;
 
+private slots:
+    void on_pb_cancel_clicked();
 };
 
 #endif

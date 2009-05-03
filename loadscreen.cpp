@@ -19,11 +19,27 @@
 
 #include "loadscreen.h"
 
-LoadScreen::LoadScreen(QWidget *parent)
-  :QDialog(parent)
+LoadScreen::LoadScreen(QWidget *parent, QFutureWatcher<QString> *watcher)
+  :QDialog(parent), m_watcher(watcher), m_canceled(false)
 {
   ui.setupUi(this);
   showFailedPhotos(false);
+  setProgressValue(0);
+  setProgressRange(0, 0);
+  setProgressText(QLatin1String(""));
+  clearFailedPhotos();
+  showCancel(true);
+
+  connect(m_watcher, SIGNAL(finished()), this, SLOT(finished()));
+  connect(m_watcher, SIGNAL(canceled()), this, SLOT(canceled()));
+  connect(m_watcher, SIGNAL(progressRangeChanged(int, int)), this, SLOT(setProgressRange(int,int)));
+  connect(m_watcher, SIGNAL(progressValueChanged(int)), this, SLOT(setProgressValue(int)));
+}
+
+void LoadScreen::showCancel(const bool show)
+{
+  ui.pb_cancel->setVisible(show);
+  ui.pb_close->setVisible(!show);
 }
 
 void LoadScreen::clearFailedPhotos()
@@ -35,4 +51,45 @@ void LoadScreen::showFailedPhotos(bool show)
 {
   ui.gb_failures->setVisible(show);
   adjustSize();
+}
+
+void LoadScreen::setProgressRange(int minimum, int maximum)
+{
+  ui.progressBar->setRange(minimum, maximum);
+}
+
+void LoadScreen::setProgressValue(int value)
+{
+  ui.progressBar->setValue(value);
+}
+
+void LoadScreen::setProgressText(QString text)
+{
+  ui.l_currentPhoto->setText(text);
+}
+
+void LoadScreen::addFailedPhoto(QString filename)
+{
+  ui.lw_failPhotos->addItem(filename);
+  showFailedPhotos(true);
+}
+
+void LoadScreen::finished()
+{
+  showCancel(false);
+  if (!m_canceled)
+    setProgressText(tr("Finished"));
+}
+
+void LoadScreen::canceled()
+{
+  m_canceled = true;
+  showCancel(false);
+  setProgressText(tr("Canceled"));
+}
+
+void LoadScreen::on_pb_cancel_clicked()
+{
+    // user wants to cancel the loading-process
+  m_watcher->cancel();
 }

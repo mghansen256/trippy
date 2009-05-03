@@ -27,9 +27,66 @@ Trippy::Trippy()
   m_window->ui.lv_photos->setModel(&m_photos);
   m_window->m_marble->setPhotoModel(m_photos);
 
-  QObject::connect(m_window, SIGNAL(selectedFiles(const QStringList &)), this, SLOT(filesSelected(const QStringList &)));
+  qRegisterMetaType<Photo>("Photo");
 
-  m_loadScreen = new LoadScreen(m_window);
+  m_watcher = new QFutureWatcher<QString>(this);
+
+  QObject::connect(m_window, SIGNAL(selectedFiles(const QStringList &)), this, SLOT(filesSelected(const QStringList &)));
+  connect(this, SIGNAL(photoReady(Photo)), this, SLOT(addPhoto(Photo)));
+}
+
+struct LoadImageHelper
+{
+  LoadImageHelper(QStandardItemModel *model, LoadScreen *loadScreen, Trippy *trippy)
+      : m_model(model), m_loadScreen(loadScreen), m_trippy(trippy)
+  {
+  }
+
+  typedef QString result_type;
+  QStandardItemModel *m_model;
+  LoadScreen *m_loadScreen;
+  Trippy *m_trippy;
+
+  QString operator()(const QString &filename)
+  {
+    qDebug()<<"LoadImageHelper::operator()("<<filename<<")";
+    try
+    {
+      m_trippy->photoLoadingFromConcurrent(filename);
+      Photo photo(filename);
+      if (photo.isGeoTagged())
+      {
+        photo.getThumbnailImage(); // cause the thumbnail to be generated
+        m_trippy->photoReadyFromConcurrent(photo);
+      }
+      else
+      {
+        m_trippy->photoFailedFromConcurrent(photo);
+      }
+    }
+    catch (std::exception& e)
+    {
+      qDebug()<<"Exception: "<<e.what();
+    }
+
+    return filename;
+  }
+
+};
+
+// this is a forwarding-function which is called from the thread created by QtConcurrent and transports the data into the GUI-thread
+void Trippy::photoReadyFromConcurrent(Photo photo)
+{
+  qDebug()<<"void Trippy::photoReadyFromConcurrent(Photo photo): "<<photo.getFilename();
+  emit(photoReady(photo));
+}
+
+// this is a forwarding-function which is called from the thread created by QtConcurrent and transports the data into the GUI-thread
+void Trippy::photoFailedFromConcurrent(Photo photo)
+{
+  qDebug()<<"void Trippy::photoFailedFromConcurrent(Photo photo): "<<photo.getFilename();
+  emit(photoFailed(photo));
+  emit(photoFailed(photo.getFilename()));
 }
 
 void Trippy::filesSelected(const QStringList &selected)
@@ -37,38 +94,31 @@ void Trippy::filesSelected(const QStringList &selected)
   QStringList sortedFiles = selected;
   sortedFiles.sort();
 
-  m_loadScreen->ui.progressBar->setValue(0);
-  m_loadScreen->ui.progressBar->setMaximum(sortedFiles.size());
-  m_loadScreen->ui.l_currentPhoto->setText("");
-  m_loadScreen->showFailedPhotos(false);
-  m_loadScreen->clearFailedPhotos();
+  LoadScreen *loadScreen = new LoadScreen(m_window, m_watcher);
+  connect(this, SIGNAL(photoLoading(QString)), loadScreen, SLOT(setProgressText(QString)));
+  connect(this, SIGNAL(photoFailed(QString)), loadScreen, SLOT(addFailedPhoto(QString)));
 
-  m_loadScreen->show();
+  loadScreen->show();
 
-  for (int i=0; i < sortedFiles.size(); ++i)
-  {
-    m_loadScreen->ui.l_currentPhoto->setText(sortedFiles[i]);
-    Photo photo(sortedFiles[i]);
-    if (!photo.isGeoTagged())
-    {
-      m_loadScreen->showFailedPhotos(true); 
-      m_loadScreen->ui.lw_failPhotos->addItem(sortedFiles[i]);
-    }
-    else
-    {
-      addPhoto(photo);
-    }
-    m_loadScreen->ui.progressBar->setValue(i + 1);
-  }
+  // do the expensive loading of the EXIF-data and scaling to the thumbnail in separate threads:
+  QFuture<QString> resultingNames = QtConcurrent::mapped(sortedFiles, LoadImageHelper(&m_photos, loadScreen, this));
+  m_watcher->setFuture(resultingNames);
+
+  loadScreen->exec();
+
+  resultingNames.waitForFinished();
+
+  loadScreen->deleteLater();
 
   sortPhotos();
   m_window->repaintMarbleWidget();
+
 }
 
 //Takes a Photo object and creates a QStandardItem, then places it into the model.
 void Trippy::addPhoto(Photo photo)
 {
-  QStandardItem *newItem = new QStandardItem(QIcon(photo.getThumbnail()), photo.getTimestamp().toString());
+  QStandardItem *newItem = new QStandardItem(photo.getIcon(), photo.getTimestamp().toString());
   newItem->setEditable(false);
   newItem->setData(QVariant::fromValue(photo), PhotoRole);
   newItem->setData(photo.getTimestamp(), TimestampRole);
@@ -122,4 +172,9 @@ void Trippy::sortPhotos()
   {
     m_photos.insertRow(k, photos.at(k));
   }
+}
+
+void Trippy::photoLoadingFromConcurrent(QString filename)
+{
+  emit(photoLoading(filename));
 }

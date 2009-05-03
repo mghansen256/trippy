@@ -194,7 +194,7 @@ void Window::photoClicked(const QModelIndex &index)
 
 void Window::centerMapOn(Photo *photo)
 {
-  ui.l_photo->setPixmap(photo->getThumbnail()); 
+  ui.l_photo->setPixmap(photo->getThumbnailPixmap());
   m_marble->centerOn(photo->getGpsLong(), photo->getGpsLat());
   if (ui.actionZoomOnSelectedPhoto->isChecked())
   {
