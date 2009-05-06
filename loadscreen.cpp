@@ -68,7 +68,7 @@ void LoadScreen::setProgressText(QString text)
   ui.l_currentPhoto->setText(text);
 }
 
-void LoadScreen::addFailedPhoto(QString filename)
+void LoadScreen::addFailedFile(QString filename)
 {
   ui.lw_failPhotos->addItem(filename);
   showFailedPhotos(true);

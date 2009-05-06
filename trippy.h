@@ -46,14 +46,13 @@ class Trippy : public QObject
 
   public slots:
     void photoReadyFromConcurrent(Photo photo);
-    void photoFailedFromConcurrent(Photo photo);
-    void photoLoadingFromConcurrent(QString filename);
+    void fileFailedFromConcurrent(QString filename);
+    void fileLoadingFromConcurrent(QString filename);
 
   signals:
     void photoReady(Photo photo);
-    void photoLoading(QString filename);
-    void photoFailed(Photo photo);
-    void photoFailed(QString filename);
+    void fileLoading(QString filename);
+    void fileFailed(QString filename);
 };
 
 #endif

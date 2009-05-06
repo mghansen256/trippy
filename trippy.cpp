@@ -53,7 +53,7 @@ struct LoadImageHelper
     qDebug()<<"LoadImageHelper::operator()("<<filename<<")";
     try
     {
-      m_trippy->photoLoadingFromConcurrent(filename);
+      m_trippy->fileLoadingFromConcurrent(filename);
       Photo photo(filename);
       if (photo.isGeoTagged())
       {
@@ -62,12 +62,13 @@ struct LoadImageHelper
       }
       else
       {
-        m_trippy->photoFailedFromConcurrent(photo);
+        m_trippy->fileFailedFromConcurrent(filename);
       }
     }
     catch (std::exception& e)
     {
       qDebug()<<"Exception: "<<e.what();
+      m_trippy->fileFailedFromConcurrent(filename);
     }
 
     return filename;
@@ -83,11 +84,10 @@ void Trippy::photoReadyFromConcurrent(Photo photo)
 }
 
 // this is a forwarding-function which is called from the thread created by QtConcurrent and transports the data into the GUI-thread
-void Trippy::photoFailedFromConcurrent(Photo photo)
+void Trippy::fileFailedFromConcurrent(QString filename)
 {
-  qDebug()<<"void Trippy::photoFailedFromConcurrent(Photo photo): "<<photo.getFilename();
-  emit(photoFailed(photo));
-  emit(photoFailed(photo.getFilename()));
+  qDebug()<<"void Trippy::fileFailedFromConcurrent(QString filename): "<<filename;
+  emit(fileFailed(filename));
 }
 
 void Trippy::filesSelected(const QStringList &selected)
@@ -96,8 +96,8 @@ void Trippy::filesSelected(const QStringList &selected)
   sortedFiles.sort();
 
   LoadScreen *loadScreen = new LoadScreen(m_window, m_watcher);
-  connect(this, SIGNAL(photoLoading(QString)), loadScreen, SLOT(setProgressText(QString)));
-  connect(this, SIGNAL(photoFailed(QString)), loadScreen, SLOT(addFailedPhoto(QString)));
+  connect(this, SIGNAL(fileLoading(QString)), loadScreen, SLOT(setProgressText(QString)));
+  connect(this, SIGNAL(fileFailed(QString)), loadScreen, SLOT(addFailedFile(QString)));
 
   loadScreen->show();
 
@@ -175,7 +175,7 @@ void Trippy::sortPhotos()
   }
 }
 
-void Trippy::photoLoadingFromConcurrent(QString filename)
+void Trippy::fileLoadingFromConcurrent(QString filename)
 {
-  emit(photoLoading(filename));
+  emit(fileLoading(filename));
 }

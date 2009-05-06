@@ -41,7 +41,7 @@ class LoadScreen : public QDialog
     void setProgressRange(int minimum, int maximum);
     void setProgressValue(int value);
     void setProgressText(QString text);
-    void addFailedPhoto(QString filename);
+    void addFailedFile(QString filename);
     void finished();
     void canceled();
     void showCancel(const bool show);

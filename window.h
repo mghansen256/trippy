@@ -65,9 +65,12 @@ class Window : public QMainWindow
 
   protected:
     virtual void closeEvent(QCloseEvent *event);
+    virtual void dragEnterEvent(QDragEnterEvent *event);
+    virtual void dropEvent(QDropEvent *event);
   
   public slots:
     bool eventFilter(QObject *object, QEvent* event);
+
 
   signals:  
     void selectedFiles(const QStringList &files);

@@ -24,6 +24,8 @@ Window::Window(QWidget *parent)
 {
   ui.setupUi(this);
 
+  setAcceptDrops(true);
+
   ui.lv_photos->setIconSize(QSize(60, 60));
   m_marble = new TrippyMarbleWidget(this);
   QSizePolicy marblePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -378,4 +380,45 @@ void Window::on_actionCopyCoordinates_triggered()
 
     QClipboard * const clipboard = QApplication::clipboard();
     clipboard->setMimeData(myMimeData);
+}
+
+void Window::dragEnterEvent(QDragEnterEvent *event)
+{
+  if (event->mimeData()->hasUrls())
+  {
+    event->setDropAction(Qt::CopyAction); // TODO: is "copy" the correct action? or should we use "link" instead?
+    event->accept();
+  }
+//  const QStringList formats = event->mimeData()->formats();
+//  for (int i=0; i<formats.size(); i++) {
+//    qDebug()<<formats[i];
+//    if (formats[i]=="text/uri-list")
+//      qDebug()<<QString(event->mimeData()->data(formats[i]));
+//  }
+}
+
+void Window::dropEvent(QDropEvent *event)
+{
+  if (event->mimeData()->hasUrls())
+  {
+    event->setDropAction(Qt::CopyAction); // TODO: is "copy" the correct action? or should we use "link" instead?
+    event->accept();
+  }
+
+  // get the list of files to be dropped:
+  const QList<QUrl> urlList = event->mimeData()->urls();
+
+  // get the files which we can actually accept:
+  QStringList acceptedFiles;
+  for (QList<QUrl>::const_iterator it = urlList.begin(); it!=urlList.end(); ++it)
+  {
+    const QString localFileName = it->toLocalFile();
+    if (localFileName.isEmpty())
+      continue;
+
+    acceptedFiles<<localFileName;
+  }
+
+  // import the files:
+  emit selectedFiles(acceptedFiles);
 }
