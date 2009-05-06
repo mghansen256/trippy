@@ -26,6 +26,7 @@
 
 #include "photo.h"
 #include "roles.h"
+#include <QItemSelectionModel>
 
 using namespace Marble;
 
@@ -33,13 +34,15 @@ class TrippyMarbleWidget : public MarbleWidget
 {
   public:
     TrippyMarbleWidget(QWidget *parent=0);
-    void setPhotoModel(QStandardItemModel &model);
+    void setPhotoModel(QStandardItemModel *model);
+    void setSelectionModel(QItemSelectionModel *model);
 
   protected:
     void customPaint(GeoPainter *painter);
 
   private:
     QStandardItemModel *m_photoModel;
+    QItemSelectionModel *m_selectionModel;
 };
 
 #endif

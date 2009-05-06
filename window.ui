@@ -181,6 +181,22 @@
     <string>Zoom in when a photo is selected</string>
    </property>
   </action>
+  <action name="actionRemovePhoto">
+   <property name="text">
+    <string>Remove</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove selected item(s)</string>
+   </property>
+  </action>
+  <action name="actionCopyCoordinates">
+   <property name="text">
+    <string>Copy coordinates</string>
+   </property>
+   <property name="toolTip">
+    <string>Copy coordinates of selected item to clipboard</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

@@ -85,8 +85,6 @@ Window::Window(QWidget *parent)
   mapActionTriggered(0);
   projectionActionTriggered(0);
 
-  m_previousItem = new QStandardItem;
-
   //Add photos button and menu item
   QObject::connect(ui.pb_addPhotos, SIGNAL(clicked()), this, SLOT(selectFile()));
   QObject::connect(ui.action_Add_Photos, SIGNAL(triggered()), this, SLOT(selectFile()));
@@ -104,6 +102,10 @@ Window::Window(QWidget *parent)
   //Back and Next buttons
   QObject::connect(ui.pb_back, SIGNAL(clicked()), this, SLOT(backClicked()));
   QObject::connect(ui.pb_next, SIGNAL(clicked()), this, SLOT(nextClicked()));
+
+  // get context-menu events on the image list:
+  ui.lv_photos->installEventFilter(this);
+  ui.lv_photos->setSelectionMode(QAbstractItemView::ExtendedSelection);
 }
 
 void Window::hideMapClutter()
@@ -125,14 +127,14 @@ void Window::selectFile()
 
 void Window::backClicked()
 {
-  int rowCount = ((QStandardItemModel *)ui.lv_photos->model())->rowCount();
+  const int rowCount = ((QStandardItemModel *)ui.lv_photos->model())->rowCount();
 
   if (0 == rowCount)
   {
     return;
   }
 
-  int currentRow = ui.lv_photos->currentIndex().row();
+  const int currentRow = ui.lv_photos->currentIndex().row();
   QStandardItem *nextItem = ((QStandardItemModel *)ui.lv_photos->model())->item(currentRow-1);
   
   if (!nextItem)
@@ -146,14 +148,14 @@ void Window::backClicked()
 
 void Window::nextClicked()
 {
-  int rowCount = ((QStandardItemModel *)ui.lv_photos->model())->rowCount();
+  const int rowCount = ((QStandardItemModel *)ui.lv_photos->model())->rowCount();
 
   if (0 == rowCount)
   {
     return;
   }
 
-  int currentRow = ui.lv_photos->currentIndex().row();
+  const int currentRow = ui.lv_photos->currentIndex().row();
   
   QStandardItem *nextItem = ((QStandardItemModel *)ui.lv_photos->model())->item(currentRow+1);
   
@@ -177,22 +179,15 @@ void Window::filesSelected(const QStringList &selected)
 
 void Window::photoClicked(const QModelIndex &index)
 {
-  QStandardItemModel *model = (QStandardItemModel *)ui.lv_photos->model();
-  QStandardItem *item = model->itemFromIndex(index);
-  item->setData(true, SelectedRole);
+  const QStandardItemModel * const model = static_cast<QStandardItemModel*>(ui.lv_photos->model());
+  const QStandardItem * const item = model->itemFromIndex(index);
 
-  if (item != m_previousItem)
-  {
-    m_previousItem->setData(false, SelectedRole);
-    m_previousItem = item;
-  }
-
-  QVariant v = item->data(PhotoRole);
-  Photo photo = v.value<Photo>();
+  const QVariant v = item->data(PhotoRole);
+  const Photo photo = v.value<Photo>();
   centerMapOn(&photo);
 }
 
-void Window::centerMapOn(Photo *photo)
+void Window::centerMapOn(const Photo * const photo)
 {
   ui.l_photo->setPixmap(photo->getThumbnailPixmap());
   m_marble->centerOn(photo->getGpsLong(), photo->getGpsLat());
@@ -271,4 +266,116 @@ void Window::closeEvent(QCloseEvent *event)
   appSettings.setValue(QLatin1String("AddPhotosState"), m_fileDialog->saveState());
 
   event->accept();
+}
+
+bool Window::eventFilter(QObject *object, QEvent* event)
+{
+  if (event->type() == QEvent::ContextMenu)
+  {
+    QContextMenuEvent * const e = static_cast<QContextMenuEvent*>(event);
+
+    const QModelIndexList selectedStuff = ui.lv_photos->selectionModel()->selectedIndexes();
+    qDebug()<<"ContextMenuEvent: "<<selectedStuff.size()<<" items selected";
+
+    if (selectedStuff.isEmpty())
+      return true; // nothing selected
+
+    // construct the context menu:
+    QMenu * const contextMenu = new QMenu(this);
+    contextMenu->addAction(ui.actionRemovePhoto);
+    ui.actionCopyCoordinates->setEnabled(ui.lv_photos->selectionModel()->selectedIndexes().size()==1);
+    contextMenu->addAction(ui.actionCopyCoordinates);
+
+    contextMenu->exec(e->globalPos());
+
+    return true;
+  }
+  else
+  {
+    return QObject::eventFilter(object, event);
+  }
+}
+
+
+void Window::on_actionRemovePhoto_triggered()
+{
+    qDebug()<<"on_actionRemovePhoto_triggered()";
+
+    // remove selected photos from the model:
+    const QModelIndexList selectedStuff = ui.lv_photos->selectionModel()->selectedIndexes();
+    qDebug()<<"ContextMenuEvent: "<<selectedStuff.size()<<" items selected";
+
+    if (selectedStuff.isEmpty())
+      return; // nothing selected
+
+    QStandardItemModel * const stdmodel = static_cast<QStandardItemModel*>(ui.lv_photos->model());
+    if (!stdmodel)
+    {
+      qDebug()<<"model not found";
+      return;
+    }
+
+    // convert the model-indices to persistent model indices which will stay valid across deletion:
+    QList<QPersistentModelIndex> persistentIndices;
+    for (QModelIndexList::const_iterator it = selectedStuff.begin(); it!=selectedStuff.end(); ++it) {
+       persistentIndices << *it;
+    }
+
+    // TODO: this does not work for more than one item!
+    for (QList<QPersistentModelIndex>::const_iterator it = persistentIndices.begin(); it!=persistentIndices.end(); ++it)
+    {
+      stdmodel->removeRow(it->row());
+    }
+
+    repaintMarbleWidget();
+}
+
+void Window::on_actionCopyCoordinates_triggered()
+{
+    const QStandardItemModel * const model = static_cast<QStandardItemModel*>(ui.lv_photos->model());
+    const QVariant v = model->itemFromIndex(ui.lv_photos->currentIndex())->data(PhotoRole);
+    const Photo photo = v.value<Photo>();
+
+    const qreal lat = photo.getGpsLat();
+    const qreal lon = photo.getGpsLong();
+
+    const QString coordinates = QString::fromLatin1("%1,%2").arg(lon).arg(lat);
+    qDebug()<<"Copying coordinates to clipboard: \""<<coordinates<<"\"";
+
+    // importing this representation into Marble does not show anything, but Merkaartor shows the point
+    const QString kmlRepresentation = QString::fromLatin1(
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+      "<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n"
+      "<Document>\n"
+      " <Placemark>\n"
+      "   <name>%1</name>\n"
+      "   <Point>\n"
+      "     <coordinates>%2</coordinates>\n"
+      "   </Point>\n"
+      " </Placemark>\n"
+      "</Document>\n"
+      "</kml>\n"
+      ).arg(photo.getFilename()).arg(coordinates);
+
+    // importing this data into Marble and Merkaartor works
+    const QString gpxRepresentation = QString::fromLatin1(
+      "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n"
+      "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"trippy\" version=\"0.1\"\n"
+      " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+      " xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">\n"
+      "  <wpt lat=\"%1\" lon=\"%2\">\n"
+//      "   <ele></ele>\n"
+//      "   <time></time>\n"
+      "   <name>%3</name>\n"
+      "  </wpt>\n"
+      "</gpx>\n"
+      ).arg(lat).arg(lon).arg(photo.getFilename());
+
+    QMimeData * const myMimeData = new QMimeData();
+    myMimeData->setText(coordinates);
+    myMimeData->setData(QLatin1String("application/vnd.google-earth.kml+xml"), kmlRepresentation.toUtf8());
+    myMimeData->setData(QLatin1String("application/gpx+xml"), gpxRepresentation.toUtf8());
+
+    QClipboard * const clipboard = QApplication::clipboard();
+    clipboard->setMimeData(myMimeData);
 }

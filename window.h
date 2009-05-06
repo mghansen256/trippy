@@ -38,19 +38,20 @@ class Window : public QMainWindow
   public:
     Window(QWidget *parent=0);
     Ui::window ui;
-    void centerMapOn(Photo *photo);
-    void addPhoto(Photo photo);
+    void centerMapOn(const Photo * const photo);
+//    void addPhoto(Photo photo);
     void sortPhotos();
     void repaintMarbleWidget();
     TrippyMarbleWidget *m_marble;
 
   private:
     QFileDialog *m_fileDialog;
-    QStandardItem *m_previousItem;
     QActionGroup *m_actionGroupMap;
     QActionGroup *m_actionGroupProjection;
  
   private slots:
+    void on_actionCopyCoordinates_triggered();
+    void on_actionRemovePhoto_triggered();
     void selectFile();
     void filesSelected(const QStringList &files);
     void photoClicked(const QModelIndex &index);
@@ -65,6 +66,9 @@ class Window : public QMainWindow
   protected:
     virtual void closeEvent(QCloseEvent *event);
   
+  public slots:
+    bool eventFilter(QObject *object, QEvent* event);
+
   signals:  
     void selectedFiles(const QStringList &files);
 };

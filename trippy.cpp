@@ -25,7 +25,8 @@ Trippy::Trippy()
   m_window->show();
   
   m_window->ui.lv_photos->setModel(&m_photos);
-  m_window->m_marble->setPhotoModel(m_photos);
+  m_window->m_marble->setPhotoModel(&m_photos);
+  m_window->m_marble->setSelectionModel(m_window->ui.lv_photos->selectionModel());
 
   qRegisterMetaType<Photo>("Photo");
 

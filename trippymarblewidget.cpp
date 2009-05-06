@@ -22,70 +22,67 @@
 #include <GeoDataPoint.h>
 
 TrippyMarbleWidget::TrippyMarbleWidget(QWidget *parent)
-  : MarbleWidget(parent)
+  : MarbleWidget(parent), m_photoModel(0), m_selectionModel(0)
 {
-
-  m_photoModel = new QStandardItemModel();
 }
 
-void TrippyMarbleWidget::setPhotoModel(QStandardItemModel &model)
+void TrippyMarbleWidget::setPhotoModel(QStandardItemModel *model)
 {
-  delete m_photoModel;
-  m_photoModel = &model;
+  m_photoModel = model;
+}
+
+void TrippyMarbleWidget::setSelectionModel(QItemSelectionModel *model)
+{
+  m_selectionModel = model;
 }
 
 void TrippyMarbleWidget::customPaint(GeoPainter *painter)
 {
+  if (!m_photoModel)
+    return; // no photos to display!
+
   QPen pen(Qt::blue);
   pen.setWidth(2);
   painter->setPen(pen);
 
-  GeoDataPoint selected;
-  GeoDataPoint selected_source;
-
-  bool selectionExists = false;
-  bool selectionSourceExists = false;
-  bool isSelected = false;
-
+  GeoDataPoint lastPoint;
   for (int i=0; i<m_photoModel->rowCount(); ++i)
   {
-    QVariant v = m_photoModel->item(i)->data(PhotoRole);
-    Photo current = v.value<Photo>();
-    isSelected = m_photoModel->item(i)->data(SelectedRole).toBool();
+    const QVariant v = m_photoModel->item(i)->data(PhotoRole);
+    const Photo current = v.value<Photo>();
 
-    if (isSelected)
+    const GeoDataPoint currentPoint = GeoDataPoint(current.getGpsLong(), current.getGpsLat(), 0 , GeoDataCoordinates::Degree);
+    painter->drawEllipse(currentPoint, 6, 6);
+
+    if (i > 0)
     {
-      selectionExists = true;
-      selected = GeoDataPoint(current.getGpsLong(), current.getGpsLat(), 0 , GeoDataCoordinates::Degree);
+      painter->drawLine(currentPoint, lastPoint);
     }
-    
-    painter->drawEllipse(GeoDataPoint(current.getGpsLong(), current.getGpsLat(), 0 , GeoDataCoordinates::Degree), 6, 6);
 
-    if (i != 0)
-    {
-      QVariant v = m_photoModel->item(i - 1)->data(PhotoRole);
-      Photo last = v.value<Photo>();
-
-      if (isSelected)
-      {
-        selectionSourceExists = true;
-        selected_source = GeoDataPoint(last.getGpsLong(), last.getGpsLat(), 0 , GeoDataCoordinates::Degree);
-      }
-
-      painter->drawLine(GeoDataPoint(current.getGpsLong(), current.getGpsLat(), 0 , GeoDataCoordinates::Degree), GeoDataPoint(last.getGpsLong(), last.getGpsLat(), 0 , GeoDataCoordinates::Degree));
-    }
+    lastPoint = currentPoint;
   }
 
-  //re-drawing the currently selected item, this time in red to make it stand out.
-  if (selectionExists)
-  {
-    pen.setColor(Qt::red);
-    painter->setPen(pen);
+  // re-draw the selected items to make them stand out
+  if (!m_selectionModel)
+    return;
 
-    painter->drawEllipse(selected, 6, 6);
-    if (selectionSourceExists)
+  pen.setColor(Qt::red);
+  painter->setPen(pen);
+
+  QModelIndexList selectedIndices = m_selectionModel->selectedIndexes();
+  for (QModelIndexList::const_iterator it = selectedIndices.begin(); it!=selectedIndices.end(); ++it)
+  {
+    const QVariant v = m_photoModel->itemFromIndex(*it)->data(PhotoRole);
+    const Photo current = v.value<Photo>();
+    const GeoDataPoint currentPoint = GeoDataPoint(current.getGpsLong(), current.getGpsLat(), 0 , GeoDataCoordinates::Degree);
+    painter->drawEllipse(currentPoint, 6, 6);
+
+    if (it->row()>0)
     {
-      painter->drawLine(selected, selected_source);
+      const QVariant v = m_photoModel->item(it->row()-1)->data(PhotoRole);
+      const Photo previous = v.value<Photo>();
+      const GeoDataPoint previousPoint = GeoDataPoint(previous.getGpsLong(), previous.getGpsLat(), 0 , GeoDataCoordinates::Degree);
+      painter->drawLine(currentPoint, previousPoint);
     }
   }
 }
