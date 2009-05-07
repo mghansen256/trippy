@@ -341,7 +341,7 @@ void Window::on_actionCopyCoordinates_triggered()
     const qreal lat = photo.getGpsLat();
     const qreal lon = photo.getGpsLong();
 
-    const QString coordinates = QString::fromLatin1("%1,%2").arg(lon).arg(lat);
+    const QString coordinates = QString::fromLatin1("%1,%2").arg(lon, 0, 'f', 10).arg(lat, 0, 'f', 10);
     qDebug()<<"Copying coordinates to clipboard: \""<<coordinates<<"\"";
 
     // importing this representation into Marble does not show anything, but Merkaartor shows the point
@@ -371,7 +371,7 @@ void Window::on_actionCopyCoordinates_triggered()
       "   <name>%3</name>\n"
       "  </wpt>\n"
       "</gpx>\n"
-      ).arg(lat).arg(lon).arg(photo.getFilename());
+      ).arg(lat, 0, 'f', 10).arg(lon, 0, 'f', 10).arg(photo.getFilename());
 
     QMimeData * const myMimeData = new QMimeData();
     myMimeData->setText(coordinates);
@@ -389,12 +389,6 @@ void Window::dragEnterEvent(QDragEnterEvent *event)
     event->setDropAction(Qt::CopyAction); // TODO: is "copy" the correct action? or should we use "link" instead?
     event->accept();
   }
-//  const QStringList formats = event->mimeData()->formats();
-//  for (int i=0; i<formats.size(); i++) {
-//    qDebug()<<formats[i];
-//    if (formats[i]=="text/uri-list")
-//      qDebug()<<QString(event->mimeData()->data(formats[i]));
-//  }
 }
 
 void Window::dropEvent(QDropEvent *event)
