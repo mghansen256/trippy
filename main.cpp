@@ -32,7 +32,10 @@ int main(int argc, char* argv[])
   {
     fileNames << QString::fromLocal8Bit(argv[i]);
   }
-  trippy.filesSelected(fileNames);
+  if (!fileNames.isEmpty())
+  {
+    trippy.filesSelected(fileNames);
+  }
   
   return app.exec();
 }

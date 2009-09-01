@@ -39,8 +39,13 @@ SET(trippy_qtui
   loadscreen.ui
 )
 
+SET(trippy_qtresources
+  resources.qrc
+)
+
 QT4_WRAP_CPP(trippy_generated ${trippy_qtheaders})
 QT4_WRAP_UI(trippy_generated ${trippy_qtui})
+QT4_ADD_RESOURCES(trippy_generated ${trippy_qtresources})
 
 ADD_EXECUTABLE(trippy WIN32 ${trippy_sources} ${trippy_generated})
 TARGET_LINK_LIBRARIES(trippy ${QT_LIBRARIES} ${EXIV2_LIBRARIES} ${LIBMARBLEWIDGET_LIBRARY})
