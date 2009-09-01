@@ -32,9 +32,6 @@ Window::Window(QWidget *parent)
   marblePolicy.setHorizontalStretch(3);
   m_marble->setSizePolicy(marblePolicy);
 
-  //Needed to fetch missing tiles. Hope it's alright to use this KDE hosted one...
-  m_marble->setDownloadUrl( "http://download.kde.org/apps/marble/" );
-
   //make the actions exclusive (we have to do this here since it can not be done in the UI-editor):
   m_actionGroupMap = new QActionGroup(this);
   m_actionGroupMap->addAction(ui.actionAtlas);

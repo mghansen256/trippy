@@ -25,5 +25,14 @@ int main(int argc, char* argv[])
 
   QApplication app(argc, argv);
   Trippy trippy;
+  
+  // read the command-line arguments - for now we only expect filenames:
+  QStringList fileNames;
+  for (int i=1; i<argc; i++)
+  {
+    fileNames << QString::fromLocal8Bit(argv[i]);
+  }
+  trippy.filesSelected(fileNames);
+  
   return app.exec();
 }

@@ -92,6 +92,9 @@ void Trippy::fileFailedFromConcurrent(QString filename)
 
 void Trippy::filesSelected(const QStringList &selected)
 {
+  if (selected.isEmpty())
+    return;
+  
   QStringList sortedFiles = selected;
   sortedFiles.sort();
 

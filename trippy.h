@@ -40,11 +40,11 @@ class Trippy : public QObject
     QFutureWatcher<QString> *m_watcher;
 
   private slots:
-    void filesSelected(const QStringList &files);
     void addPhoto(Photo photo);
     void sortPhotos();
 
   public slots:
+    void filesSelected(const QStringList &files);
     void photoReadyFromConcurrent(Photo photo);
     void fileFailedFromConcurrent(QString filename);
     void fileLoadingFromConcurrent(QString filename);
