@@ -20,6 +20,7 @@
 #include "trippy.h"
 
 Trippy::Trippy()
+: m_window(0), m_fileDialog(0), m_photos(), m_watcher()
 {
   m_window = new Window();
   m_window->show();
@@ -134,7 +135,7 @@ void Trippy::addPhoto(Photo photo)
 void Trippy::sortPhotos()
 {
   QList<QStandardItem *> photos;
-
+  
   //Move the items from the model to a list...
   while (m_photos.rowCount() > 0)
   {

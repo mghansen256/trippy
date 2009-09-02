@@ -21,7 +21,7 @@
 #include <QFile>
 
 Photo::Photo(const QString &path)
-  : m_gpsLat(-1), m_gpsLong(-1), m_filename(path) 
+  : m_timestamp(), m_gpsLat(-1), m_gpsLong(-1), m_filename(path), m_thumbnail()
 {
   Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(QFile::encodeName(path).constData());
   image->readMetadata();

@@ -30,19 +30,35 @@
 
 using namespace Marble;
 
+class MarkerClusterHolder;
+
 class TrippyMarbleWidget : public MarbleWidget
 {
+  Q_OBJECT
+  
   public:
     TrippyMarbleWidget(QWidget *parent=0);
     void setPhotoModel(QStandardItemModel *model);
     void setSelectionModel(QItemSelectionModel *model);
 
+  public slots:
+    void slotSetUseClustering(const bool doIt);
+    
   protected:
     void customPaint(GeoPainter *painter);
 
+  private slots:
+    void slotModelRowsAdded(const QModelIndex& parent, int start, int end);
+    void slotModelRowsAboutToBeRemoved(const QModelIndex& parent, int start, int end);
+    
   private:
     QStandardItemModel *m_photoModel;
     QItemSelectionModel *m_selectionModel;
+    MarkerClusterHolder *m_markerClusterHolder;
+    bool m_useClustering;
+    
+  private:
+    Q_DISABLE_COPY(TrippyMarbleWidget)
 };
 
 #endif

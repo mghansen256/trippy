@@ -49,6 +49,9 @@ class LoadScreen : public QDialog
 
 private slots:
     void on_pb_cancel_clicked();
+    
+private:
+  Q_DISABLE_COPY(LoadScreen)
 };
 
 #endif

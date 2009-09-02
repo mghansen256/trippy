@@ -20,7 +20,7 @@
 #include "loadscreen.h"
 
 LoadScreen::LoadScreen(QWidget *parent, QFutureWatcher<QString> *watcher)
-  :QDialog(parent), m_watcher(watcher), m_canceled(false)
+  :QDialog(parent), ui(), m_watcher(watcher), m_canceled(false)
 {
   ui.setupUi(this);
   showFailedPhotos(false);

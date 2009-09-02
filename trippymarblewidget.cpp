@@ -19,16 +19,64 @@
 
 #include "trippymarblewidget.h"
 
+#include <QDebug>
 #include <GeoDataPoint.h>
+#include "markerclusterholder.h"
 
 TrippyMarbleWidget::TrippyMarbleWidget(QWidget *parent)
-  : MarbleWidget(parent), m_photoModel(0), m_selectionModel(0)
+  : MarbleWidget(parent), m_photoModel(0), m_selectionModel(0), m_markerClusterHolder(new MarkerClusterHolder(this)), m_useClustering(true)
 {
+}
+
+void TrippyMarbleWidget::slotSetUseClustering(const bool doIt)
+{
+  m_useClustering = doIt;
+  update();
 }
 
 void TrippyMarbleWidget::setPhotoModel(QStandardItemModel *model)
 {
   m_photoModel = model;
+  connect(m_photoModel, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
+          this, SLOT(slotModelRowsAdded(const QModelIndex&, int, int)));
+  connect(m_photoModel, SIGNAL(rowsAboutToBeRemoved(const QModelIndex&, int, int)),
+          this, SLOT(slotModelRowsAboutToBeRemoved(const QModelIndex&, int, int)));
+  connect(m_photoModel, SIGNAL(modelReset()),
+          m_markerClusterHolder, SLOT(clear()));
+}
+
+template<> MarkerClusterHolder::MarkerInfo MarkerClusterHolder::MarkerInfo::fromData<Photo>(const Photo& yourdata)
+{
+  return MarkerClusterHolder::MarkerInfo(yourdata.getGpsLong(), yourdata.getGpsLat(), QVariant::fromValue(yourdata));
+}
+
+template<> Photo MarkerClusterHolder::MarkerInfo::data<Photo>() const
+{
+  return m_data.value<Photo>();
+}
+
+void TrippyMarbleWidget::slotModelRowsAdded(const QModelIndex& parent, int start, int end)
+{
+  Q_UNUSED(parent)
+  
+  qDebug()<<QString("slotModelRowsAdded: start=%1, end=%2").arg(start).arg(end);
+  // add the new rows to the clustering system:
+  MarkerClusterHolder::MarkerInfo::List markerList;
+  for (int i=start; i<=end; ++i)
+  {
+    const QVariant v = m_photoModel->item(i)->data(PhotoRole);
+    const Photo current = v.value<Photo>();
+    markerList << MarkerClusterHolder::MarkerInfo::fromData<Photo>(current);
+  }
+  m_markerClusterHolder->addMarkers(markerList);
+}
+
+void TrippyMarbleWidget::slotModelRowsAboutToBeRemoved(const QModelIndex& parent, int start, int end)
+{
+  Q_UNUSED(parent)
+  
+  qDebug()<<QString("slotModelRowsAboutToBeRemoved: start=%1, end=%2").arg(start).arg(end);
+  m_markerClusterHolder->removeMarkers(start, end);
 }
 
 void TrippyMarbleWidget::setSelectionModel(QItemSelectionModel *model)
@@ -40,6 +88,12 @@ void TrippyMarbleWidget::customPaint(GeoPainter *painter)
 {
   if (!m_photoModel)
     return; // no photos to display!
+    
+  if (m_useClustering)
+  {
+    m_markerClusterHolder->paintOnMarble(painter);
+    return;
+  }
 
   QPen pen(Qt::blue);
   pen.setWidth(2);

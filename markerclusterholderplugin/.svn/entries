@@ -1,0 +1,56 @@
+10
+
+dir
+0
+svn://anonsvn.kde.org/home/kde/trunk/extragear/graphics/digikam/libs/imageproperties/markerclusterholderplugin
+svn://anonsvn.kde.org/home/kde
+add
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+283d02a7-25f6-0310-bc7c-ecb5cbfe19da
+
+externaldraw.cpp
+file
+
+
+
+add
+
+externaldraw.h
+file
+
+
+
+add
+
+MarbleMacros.cmake
+file
+
+
+
+add
+
+CMakeLists.txt
+file
+
+
+
+add
+

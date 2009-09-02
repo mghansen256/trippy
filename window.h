@@ -37,11 +37,12 @@ class Window : public QMainWindow
   Q_OBJECT
   public:
     Window(QWidget *parent=0);
-    Ui::window ui;
     void centerMapOn(const Photo * const photo);
 //    void addPhoto(Photo photo);
     void sortPhotos();
     void repaintMarbleWidget();
+    
+    Ui::window ui;
     TrippyMarbleWidget *m_marble;
 
   private:
@@ -70,10 +71,13 @@ class Window : public QMainWindow
   
   public slots:
     bool eventFilter(QObject *object, QEvent* event);
-
+    void on_actionUseClustering_triggered(bool checked);
 
   signals:  
     void selectedFiles(const QStringList &files);
+    
+  private:
+    Q_DISABLE_COPY(Window)
 };
 
 #endif

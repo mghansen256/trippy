@@ -53,6 +53,9 @@ class Trippy : public QObject
     void photoReady(Photo photo);
     void fileLoading(QString filename);
     void fileFailed(QString filename);
+    
+  private:
+    Q_DISABLE_COPY(Trippy)
 };
 
 #endif

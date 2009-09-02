@@ -120,6 +120,7 @@
     <addaction name="actionGlobe"/>
     <addaction name="separator"/>
     <addaction name="actionZoomOnSelectedPhoto"/>
+    <addaction name="actionUseClustering"/>
    </widget>
    <addaction name="menu_Photos"/>
    <addaction name="menu_Map"/>
@@ -195,6 +196,17 @@
    </property>
    <property name="toolTip">
     <string>Copy coordinates of selected item to clipboard</string>
+   </property>
+  </action>
+  <action name="actionUseClustering">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Use clustering</string>
    </property>
   </action>
  </widget>

@@ -20,7 +20,7 @@
 #include "window.h"
 
 Window::Window(QWidget *parent)
-    :QMainWindow(parent)
+    :QMainWindow(parent), ui(), m_marble(0), m_fileDialog(0), m_actionGroupMap(0), m_actionGroupProjection(0)
 {
   ui.setupUi(this);
 
@@ -53,6 +53,7 @@ Window::Window(QWidget *parent)
   // load the settings:
   QSettings appSettings;
   ui.actionZoomOnSelectedPhoto->setChecked(appSettings.value(QLatin1String("ZoomOnSelectedPhoto"), true).toBool());
+  ui.actionUseClustering->setChecked(appSettings.value(QLatin1String("UseClustering"), true).toBool());
   m_fileDialog->restoreState(appSettings.value(QLatin1String("AddPhotosState")).toByteArray());
   const int setting_map = appSettings.value(QLatin1String("MapType"), 0).toInt();
   switch (setting_map)
@@ -83,6 +84,7 @@ Window::Window(QWidget *parent)
   // cause the checked actions to be applied:
   mapActionTriggered(0);
   projectionActionTriggered(0);
+  on_actionUseClustering_triggered(ui.actionUseClustering->isChecked());
 
   //Add photos button and menu item
   QObject::connect(ui.pb_addPhotos, SIGNAL(clicked()), this, SLOT(selectFile()));
@@ -126,7 +128,7 @@ void Window::selectFile()
 
 void Window::backClicked()
 {
-  const int rowCount = ((QStandardItemModel *)ui.lv_photos->model())->rowCount();
+  const int rowCount = static_cast<QStandardItemModel*>(ui.lv_photos->model())->rowCount();
 
   if (0 == rowCount)
   {
@@ -134,11 +136,11 @@ void Window::backClicked()
   }
 
   const int currentRow = ui.lv_photos->currentIndex().row();
-  QStandardItem *nextItem = ((QStandardItemModel *)ui.lv_photos->model())->item(currentRow-1);
+  QStandardItem *nextItem = static_cast<QStandardItemModel*>(ui.lv_photos->model())->item(currentRow-1);
   
   if (!nextItem)
   {
-    nextItem = ((QStandardItemModel *)ui.lv_photos->model())->item(rowCount-1);
+    nextItem = static_cast<QStandardItemModel*>(ui.lv_photos->model())->item(rowCount-1);
   }
   
   ui.lv_photos->setCurrentIndex(nextItem->index());
@@ -147,7 +149,7 @@ void Window::backClicked()
 
 void Window::nextClicked()
 {
-  const int rowCount = ((QStandardItemModel *)ui.lv_photos->model())->rowCount();
+  const int rowCount = static_cast<QStandardItemModel*>(ui.lv_photos->model())->rowCount();
 
   if (0 == rowCount)
   {
@@ -156,11 +158,11 @@ void Window::nextClicked()
 
   const int currentRow = ui.lv_photos->currentIndex().row();
   
-  QStandardItem *nextItem = ((QStandardItemModel *)ui.lv_photos->model())->item(currentRow+1);
+  QStandardItem *nextItem = static_cast<QStandardItemModel*>(ui.lv_photos->model())->item(currentRow+1);
   
   if (!nextItem)
   {
-    nextItem = ((QStandardItemModel *)ui.lv_photos->model())->item(0);
+    nextItem = static_cast<QStandardItemModel*>(ui.lv_photos->model())->item(0);
   }
   
   ui.lv_photos->setCurrentIndex(nextItem->index());
@@ -235,6 +237,7 @@ void Window::closeEvent(QCloseEvent *event)
   QSettings appSettings;
 
   appSettings.setValue(QLatin1String("ZoomOnSelectedPhoto"), ui.actionZoomOnSelectedPhoto->isChecked());
+  appSettings.setValue(QLatin1String("UseClustering"), ui.actionUseClustering->isChecked());
 
   int projection_value = 0;
   if (ui.actionFlat->isChecked())
@@ -412,4 +415,9 @@ void Window::dropEvent(QDropEvent *event)
 
   // import the files:
   emit selectedFiles(acceptedFiles);
+}
+
+void Window::on_actionUseClustering_triggered(bool checked)
+{
+  m_marble->slotSetUseClustering(checked);
 }
