@@ -36,6 +36,7 @@
 
 // local includes
 #include "markerclusterholder.h"
+#include "markerclusterholder.moc"
 #include "markerclusterholderplugin/externaldraw.h"
 
 // constants for clusters

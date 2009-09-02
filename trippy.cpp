@@ -18,6 +18,7 @@
 */
 
 #include "trippy.h"
+#include "trippy.moc"
 
 Trippy::Trippy()
 : m_window(0), m_fileDialog(0), m_photos(), m_watcher()

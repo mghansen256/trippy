@@ -18,6 +18,7 @@
 */
 
 #include "trippymarblewidget.h"
+#include "trippymarblewidget.moc"
 
 #include <QDebug>
 #include <GeoDataPoint.h>

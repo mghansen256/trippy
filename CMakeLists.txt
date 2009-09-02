@@ -32,14 +32,6 @@ SET(trippy_sources
   markerclusterholder.cpp
 )
 
-SET(trippy_qtheaders
-  window.h
-  trippy.h
-  trippymarblewidget.h
-  loadscreen.h
-  markerclusterholder.h
-)
-
 SET(trippy_qtui
   window.ui
   loadscreen.ui
@@ -49,7 +41,7 @@ SET(trippy_qtresources
   resources.qrc
 )
 
-QT4_WRAP_CPP(trippy_generated ${trippy_qtheaders})
+QT4_AUTOMOC(${trippy_sources})
 QT4_WRAP_UI(trippy_generated ${trippy_qtui})
 QT4_ADD_RESOURCES(trippy_generated ${trippy_qtresources})
 

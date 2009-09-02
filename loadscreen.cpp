@@ -18,6 +18,7 @@
 */
 
 #include "loadscreen.h"
+#include "loadscreen.moc"
 
 LoadScreen::LoadScreen(QWidget *parent, QFutureWatcher<QString> *watcher)
   :QDialog(parent), ui(), m_watcher(watcher), m_canceled(false)

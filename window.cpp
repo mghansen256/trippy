@@ -18,6 +18,7 @@
 */
 
 #include "window.h"
+#include "window.moc"
 
 Window::Window(QWidget *parent)
     :QMainWindow(parent), ui(), m_marble(0), m_fileDialog(0), m_actionGroupMap(0), m_actionGroupProjection(0)
