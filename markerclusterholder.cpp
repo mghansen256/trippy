@@ -1,9 +1,9 @@
 /* ============================================================
  *
- * This file is a part of digiKam project
- * http://www.digikam.org
+ * This file is a part of markerclusterholder, developed
+ * for digikam and trippy
  *
- * Date        : 2009-08-28
+ * Date        : 2009-09-03
  * Description : clustering of markers support for worldmapwidget
  *
  * Copyright (C) 2009 by Michael G. Hansen <mhansen at mghansen dot de>
@@ -37,7 +37,11 @@
 // local includes
 #include "markerclusterholder.h"
 #include "markerclusterholder.moc"
+
+// externaldraw plugin only supported on version 0.8 or higher
+#if MARBLE_VERSION >= 0x000800
 #include "markerclusterholderplugin/externaldraw.h"
+#endif // MARBLE_VERSION >= 0x000800
 
 // constants for clusters
 const int ClusterRadius = 15;
@@ -66,7 +70,12 @@ class MarkerClusterHolderPrivate
     void* tooltipFunctionData;
     MarkerClusterHolder::ClusterPixmapFunction clusterPixmapFunction;
     void* clusterPixmapFunctionData;
+
+// externaldraw plugin only supported on version 0.8 or higher
+#if MARBLE_VERSION >= 0x000800
     Marble::ExternalDrawPlugin* externalDrawPlugin;
+#endif // MARBLE_VERSION >= 0x000800
+    
     
     MarkerClusterHolderPrivate(Marble::MarbleWidget* parameterMarbleWidget)
     : marbleWidget(parameterMarbleWidget),
@@ -86,15 +95,17 @@ class MarkerClusterHolderPrivate
       tooltipFunction(0),
       tooltipFunctionData(0),
       clusterPixmapFunction(0),
-      clusterPixmapFunctionData(0),
-      externalDrawPlugin(0)
+      clusterPixmapFunctionData(0)
+// externaldraw plugin only supported on version 0.8 or higher
+#if MARBLE_VERSION >= 0x000800
+      , externalDrawPlugin(0)
+#endif // MARBLE_VERSION >= 0x000800
     {
     }
     
     
   private:
     Q_DISABLE_COPY(MarkerClusterHolderPrivate)
-    
 };
 
 /**
@@ -118,23 +129,32 @@ void MarkerClusterHolder::ExternalDrawCallback(Marble::GeoPainter *painter, void
 MarkerClusterHolder::MarkerClusterHolder(Marble::MarbleWidget* const marbleWidget)
   : QObject(marbleWidget), d(new MarkerClusterHolderPrivate(marbleWidget))
 {
+// event filter for mouse clicks does not work reliably in <0.8, no idea why...
+#if MARBLE_VERSION >= 0x000800
   d->marbleWidget->installEventFilter(this);
+#endif // MARBLE_VERSION >= 0x000800
   
+// externaldraw plugin only supported on version 0.8 or higher
+#if MARBLE_VERSION >= 0x000800
   // try to find the ExternalDrawPlugin
   d->externalDrawPlugin = Marble::ExternalDrawPlugin::findPluginInstance(d->marbleWidget);
   if (d->externalDrawPlugin)
   {
     d->externalDrawPlugin->setRenderCallback(ExternalDrawCallback, this);
   }
+#endif // MARBLE_VERSION >= 0x000800
 }
 
 MarkerClusterHolder::~MarkerClusterHolder()
 {
+// externaldraw plugin only supported on version 0.8 or higher
+#if MARBLE_VERSION >= 0x000800
   // remove the callback function from the ExternalDrawPlugin
   if (d->externalDrawPlugin)
   {
     d->externalDrawPlugin->setRenderCallback(0, 0);
   }
+#endif // MARBLE_VERSION >= 0x000800
 }
 
 /**
@@ -353,10 +373,15 @@ void MarkerClusterHolder::ClusterInfo::getColorInfos(const bool haveAnySolo, QCo
  */
 void MarkerClusterHolder::paintOnMarble(Marble::GeoPainter* const painter)
 {
+// externaldraw plugin only supported on version 0.8 or higher
+#if MARBLE_VERSION >= 0x000800
   if (!d->externalDrawPlugin)
   {
     paintOnMarbleInternal(painter);
   }
+#else
+  paintOnMarbleInternal(painter);
+#endif // MARBLE_VERSION >= 0x000800
 }
 
 /**
@@ -395,7 +420,8 @@ void MarkerClusterHolder::paintOnMarbleInternal(Marble::GeoPainter* const painte
     if (d->clusterPixmapFunction)
     {
       const QSize maxPixmapSize = cluster.maxSize;
-      havePixmap = d->clusterPixmapFunction(cluster, &(d->markers), maxPixmapSize, d->clusterPixmapFunctionData, &clusterPixmap);
+            havePixmap = d->clusterPixmapFunction(cluster, &(d->markers), maxPixmapSize,
+                                   d->clusterPixmapFunctionData, &clusterPixmap);
     }
     
     // determine the color:
@@ -405,7 +431,8 @@ void MarkerClusterHolder::paintOnMarbleInternal(Marble::GeoPainter* const painte
     QColor labelColor;
     QString labelText;
     
-    cluster.getColorInfos(d->haveAnySoloMarkers, &fillColor, &strokeColor, &strokeStyle, &labelText, &labelColor);
+        cluster.getColorInfos(d->haveAnySoloMarkers, &fillColor, &strokeColor,
+                              &strokeStyle, &labelText, &labelColor);
     
     if (havePixmap)
     {
@@ -447,7 +474,8 @@ void MarkerClusterHolder::paintOnMarbleInternal(Marble::GeoPainter* const painte
       painter->drawEllipse(clusterX-radius, clusterY-radius, 2*radius, 2*radius);
 
       painter->setPen(labelPen);
-      painter->drawText(QRect(clusterX-radius,clusterY-radius,2*radius,2*radius), Qt::AlignHCenter|Qt::AlignVCenter, labelText);
+            painter->drawText(QRect(clusterX-radius,clusterY-radius,2*radius,2*radius),
+                              Qt::AlignHCenter|Qt::AlignVCenter, labelText);
       
       // we used the default size of the cluster:
       it->lastSize = ClusterDefaultSize;
@@ -506,82 +534,8 @@ void MarkerClusterHolder::setAutoRedrowOnMarkerAdd(const bool doRedraw)
  */
 void MarkerClusterHolder::reorderClusters()
 {
-//   reorderClustersSimple();
   reorderClustersPixelGrid();
 }
-
-#if 0
-/**
- * @brief Reorder the clusters if the map has changed
- */
-void MarkerClusterHolder::reorderClustersSimple()
-{
-  // check whether the parameters of the map changed:
-  const int newZoom = d->marbleWidget->zoom();
-  const qreal newCenterLatitude = d->marbleWidget->centerLatitude();
-  const qreal newCenterLongitude = d->marbleWidget->centerLongitude();
-  
-  if (! ((newZoom!=d->lastZoom)||(newCenterLatitude!=d->lastCenterLatitude)||(newCenterLongitude!=d->lastCenterLongitude)||d->markerCountDirty) )
-  {
-    // no big changes, check if highlighting has changed:
-    updateClusterHighlighting();
-    
-    return;
-  }
-  
-  // save map settings:
-  d->lastZoom = newZoom;
-  d->lastCenterLatitude = newCenterLatitude;
-  d->lastCenterLongitude = newCenterLongitude;
-  d->markerCountDirty = true;
-  
-  // clear all clusters:
-  d->clusters.clear();
-  
-  // re-add the markers to clusters:
-  for (QList<MarkerInfo>::const_iterator itMarker = d->markers.constBegin(); itMarker!=d->markers.constEnd(); ++itMarker)
-  {
-    const MarkerInfo& marker = *itMarker;
-    
-    const qreal m_gridSize = 30;
-    // get the screen coordinates and check whether the marker is on screen:
-    qreal markerX, markerY;
-    if (!d->marbleWidget->screenCoordinates(marker.lon, marker.lat, markerX, markerY))
-      continue;
-    
-    // any existing cluster?
-    bool foundCluster = false;
-    for (QList<ClusterInfo>::iterator itCluster = d->clusters.begin(); itCluster!=d->clusters.end(); ++itCluster)
-    {
-      ClusterInfo& cluster = *itCluster;
-      qreal clusterX, clusterY;
-      if (!d->marbleWidget->screenCoordinates(cluster.lon, cluster.lat, clusterX, clusterY))
-        continue; // this should not happen, but lets make sure!
-      
-      // test whether the marker belongs into the cluster:
-      if ( ( abs(markerX-clusterX)<=m_gridSize ) && ( abs(markerY-clusterY)<=m_gridSize ) )
-      {
-        // marker found:
-        cluster.addMarker(marker);
-        foundCluster = true;
-        break;
-      }
-    }
-      
-    if (!foundCluster)
-    {
-      // add new cluster:
-      ClusterInfo info;
-      info.addMarker(marker);
-      d->clusters << info;
-    }
-  }
-  
-  updateClusterHighlighting(true);
-  
-  kDebug(50003) << QString("MarkerClusterHolder::reorderClusters(): %1 markers in %2 clusters").arg(d->markers.size()).arg(d->clusters.count());
-}
-#endif
 
 /**
  * @brief Helper function, returns the square of the distance between two points
@@ -621,14 +575,12 @@ void MarkerClusterHolder::reorderClustersPixelGrid()
   // clear all clusters:
   d->clusters.clear();
   
-  const int gridSizeScreen = ClusterGridSizeScreen;
-  const int pixelScaling = 1;
-  const int gridSize = gridSizeScreen/pixelScaling;
+  const int gridSize = ClusterGridSizeScreen;
   
   // add all markers to a grid:
   const QSize mapSize = d->marbleWidget->map()->size();
-  const int gridWidth = mapSize.width()/pixelScaling;
-  const int gridHeight = mapSize.height()/pixelScaling;
+  const int gridWidth = mapSize.width();
+  const int gridHeight = mapSize.height();
   QVector<QIntList> pixelGrid(gridWidth*gridHeight, QIntList());
   QList<QPair<QPoint, QIntList> > leftOverList;
   for (int i = 0; i<d->markers.count(); ++i)
@@ -636,10 +588,19 @@ void MarkerClusterHolder::reorderClustersPixelGrid()
     const MarkerInfo& marker = d->markers.at(i);
     
     // get the screen coordinates and check whether the marker is on screen:
-    qreal markerX, markerY;
+    int markerX, markerY;
+#if MARBLE_VERSION >= 0x000800
+    qreal qrealMarkerX, qrealMarkerY;
+    if (!d->marbleWidget->screenCoordinates(marker.lon(), marker.lat(), qrealMarkerX, qrealMarkerY))
+      continue;
+    markerX = qrealMarkerX;
+    markerY = qrealMarkerY;
+#else
     if (!d->marbleWidget->screenCoordinates(marker.lon(), marker.lat(), markerX, markerY))
       continue;
-    markerX/=pixelScaling; markerY/=pixelScaling;
+#endif
+
+    // make sure we are in the grid
     if (markerX<0)
       markerX=0;
     if (markerY<0)
@@ -807,7 +768,7 @@ void MarkerClusterHolder::computeClusterDistances()
   {
     const QPoint destClusterPos = d->clusters.at(idest).pixelPos;
 
-    // only compute distances for clusters behind idest, all distances before that were already calculated
+        // TODO: only compute distances for clusters behind idest, all distances before that were already calculated
     for (int isource = 0;/*idest+1*/ isource<nClusters; ++isource)
     {
       if (isource==idest)
@@ -837,22 +798,6 @@ void MarkerClusterHolder::computeClusterDistances()
           minDistX[idest] = std::min(minDistX[idest], distanceX);
         }
       }
-//       if ((distanceX<minDistX[idest])&&(distanceY<minDistY[idest]/2))
-//       {
-//         minDistX[idest] = distanceX;
-//       }
-//       if ((distanceY<minDistY[idest])&&(distanceX<minDistX[idest]/2))
-//       {
-//         minDistY[idest] = distanceY;
-//       }
-//       if ((distanceX<minDistX[isource])&&(distanceY<minDistY[isource]/2))
-//       {
-//         minDistX[isource] = distanceX;
-//       }
-//       if ((distanceY<minDistY[isource])&&(distanceX<minDistX[isource]/2))
-//       {
-//         minDistY[isource] = distanceY;
-//       }
     }
 
     d->clusters[idest].maxSize = QSize(minDistX[idest], minDistY[idest]);
@@ -1112,6 +1057,8 @@ int MarkerClusterHolder::findClusterAt(const QPoint pos) const
   return -1;
 }
 
+// event filter for mouse clicks does not work reliably in <0.8, no idea why...
+#if MARBLE_VERSION >= 0x000800
 /**
  * @brief Eventfilter for filtering mouse interactions with Marble::MarbleWidget
  *
@@ -1123,7 +1070,7 @@ int MarkerClusterHolder::findClusterAt(const QPoint pos) const
  */
 bool MarkerClusterHolder::eventFilter(QObject *obj, QEvent *event)
 {
-  if ( (event->type() != QEvent::MouseButtonPress) && ( !d->tooltipFunction || (event->type() != QEvent::MouseMove) ) )
+  if (/* (event->type() != QEvent::MouseButtonRelease) &&*/ (event->type() != QEvent::MouseButtonPress) && ( !d->tooltipFunction || (event->type() != QEvent::MouseMove) ) )
   {
     return QObject::eventFilter(obj, event);
   }
@@ -1135,7 +1082,7 @@ bool MarkerClusterHolder::eventFilter(QObject *obj, QEvent *event)
   const bool leftButtonPressed = mouseEvent->button()==Qt::LeftButton;
   
   bool doFilterEvent = false;
-  if ((controlPressed||shiftPressed)&&leftButtonPressed)
+  if ((event->type() == QEvent::MouseButtonPress)&&(controlPressed||shiftPressed)&&leftButtonPressed)
   {
     const QPoint mousePos = mouseEvent->pos();
     int clusterIndex = findClusterAt(mousePos);
@@ -1179,7 +1126,7 @@ bool MarkerClusterHolder::eventFilter(QObject *obj, QEvent *event)
       }
     }
   }
-  else if (d->tooltipFunction)
+  else if (d->tooltipFunction&&(event->type() == QEvent::MouseMove))
   {
     // no button handling to be done, check for tooltips:
     const QPoint mousePos = mouseEvent->pos();
@@ -1202,6 +1149,16 @@ bool MarkerClusterHolder::eventFilter(QObject *obj, QEvent *event)
       QToolTip::hideText();
     }
   }
+//   else if (event->type() == QEvent::MouseButtonRelease)
+//   {
+//     // a mouse button was released, block this event if it was released above a cluster:
+//     const QPoint mousePos = mouseEvent->pos();
+//     const int clusterIndex = findClusterAt(mousePos);
+//     if (clusterIndex>=0)
+//     {
+//       doFilterEvent = true;
+//     }
+//   }
 
   if (doFilterEvent)
   {
@@ -1210,6 +1167,7 @@ bool MarkerClusterHolder::eventFilter(QObject *obj, QEvent *event)
   // standard event processing
   return QObject::eventFilter(obj, event);
 }
+#endif // MARBLE_VERSION >= 0x000800
 
 /**
  * @brief Checks whether two markers can are the same

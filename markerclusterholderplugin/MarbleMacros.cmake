@@ -1,3 +1,6 @@
+# this file has been copied from Marble
+
+
 # the place to put in common cmake macros
 # this is needed to minimize the amount of errors to do
 macro( marble_add_plugin _target_name )

@@ -1,9 +1,9 @@
 /* ============================================================
  *
- * This file is a part of digiKam project
- * http://www.digikam.org
+ * This file is a part of markerclusterholder, developed
+ * for digikam and trippy
  *
- * Date        : 2009-08-23
+ * Date        : 2009-09-03
  * Description : clustering of markers support for worldmapwidget
  *
  * Copyright (C) 2009 by Michael G. Hansen <mhansen at mghansen dot de>
@@ -349,16 +349,6 @@ class MarkerClusterHolder : public QObject
      */
     typedef bool (*ClusterPixmapFunction)(const ClusterInfo& cluster, const MarkerInfo::List* const markerList, const QSize& maxSize, void* const yourdata, QPixmap* const clusterPixmap);
     
-  private:
-    std::auto_ptr<MarkerClusterHolderPrivate> d;
-//     void reorderClustersSimple();
-    void reorderClustersPixelGrid();
-    void redrawIfNecessary(const bool force = false);
-    void updateClusterStates();
-    void paintOnMarbleInternal(Marble::GeoPainter* const painter);
-    static void ExternalDrawCallback(Marble::GeoPainter *painter, void* yourdata);
-    void computeClusterDistances();
-  
   public:
     MarkerClusterHolder(Marble::MarbleWidget* const marbleWidget);
     ~MarkerClusterHolder();
@@ -377,11 +367,27 @@ class MarkerClusterHolder : public QObject
     void setMarkerDataEqualFunction(const MarkerDataEqualFunction compareFunction, void* const yourdata);
     void setClusterPixmapFunction(const ClusterPixmapFunction clusterPixmapFunction, void* const yourdata);
     int findClusterAt(const QPoint pos) const;
-
+    
   protected:
+// event filter for mouse clicks does not work reliably in <0.8, no idea why...
+#if MARBLE_VERSION >= 0x000800
      bool eventFilter(QObject *obj, QEvent *event);
+#endif // MARBLE_VERSION >= 0x000800
      bool markersEqual(const MarkerInfo& one, const MarkerInfo& two);
      
+  private:
+    std::auto_ptr<MarkerClusterHolderPrivate> d;
+    void reorderClustersPixelGrid();
+    void redrawIfNecessary(const bool force = false);
+    void updateClusterStates();
+    void paintOnMarbleInternal(Marble::GeoPainter* const painter);
+    static void ExternalDrawCallback(Marble::GeoPainter *painter, void* yourdata);
+    void computeClusterDistances();
+  
+  signals:
+    void signalSelectionChanged();
+    void signalSoloChanged();
+    
   public slots:
     void setAutoRedrowOnMarkerAdd(const bool doRedraw);
     void clearSelection();
@@ -395,11 +401,6 @@ class MarkerClusterHolder : public QObject
     void setAllowSelection(const bool allow);
     void setTooltipFunction(TooltipFunction newTooltipFunction, void* const yourdata);
     
-  signals:
-    void signalSelectionChanged();
-    void signalSoloChanged();
-    
-
   private:
     Q_DISABLE_COPY(MarkerClusterHolder)
 };

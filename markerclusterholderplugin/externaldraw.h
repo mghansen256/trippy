@@ -1,16 +1,26 @@
-//
-// This file is part of the Marble Desktop Globe.
-//
-// This program is free software licensed under the GNU LGPL. You can
-// find a copy of this license in LICENSE.txt in the top directory of
-// the source code.
-//
-// Copyright 2008 Torsten Rahn <tackat@kde.org>"
-//
-
-//
-// This class is a test plugin.
-//
+/* ============================================================
+ *
+ * This file is a part of markerclusterholder, developed
+ * for digikam and trippy
+ *
+ * Date        : 2009-09-03
+ * Description : callback plugin for Marble
+ *
+ * Copyright (C) 2009 by Michael G. Hansen <mhansen at mghansen dot de>
+ * Based on test-plugin for Marble, (C) 2009 Torsten Rahn
+ *
+ * This program is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU General
+ * Public License as published by the Free Software Foundation;
+ * either version 2, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * ============================================================ */
 
 #ifndef EXTERNALDRAW_H
 #define EXTERNALDRAW_H
@@ -29,11 +39,6 @@
 
 namespace Marble
 {
-
-/**
- * @short The class that specifies the Marble layer interface of a plugin.
- *
- */
 
 class ExternalDrawPlugin : public RenderPlugin
 {
@@ -83,8 +88,8 @@ class ExternalDrawPlugin : public RenderPlugin
      */
     void setRenderCallback(RenderCallbackFunction yourFunction, void* yourdata)
     {
-      renderCallbackFunction = yourFunction;
-      renderCallbackFunctionData = yourdata;
+        renderCallbackFunction = yourFunction;
+        renderCallbackFunctionData = yourdata;
     }
     
     /**
@@ -99,23 +104,23 @@ class ExternalDrawPlugin : public RenderPlugin
      */
     static ExternalDrawPlugin* findPluginInstance(MarbleWidget* const marbleWidget)
     {
-      Marble::MarbleMap* const marbleMap = marbleWidget->map();
-      
-      // find the ExternalDraw plugin:
-      const QList<Marble::RenderPlugin*> renderPlugins = marbleMap->renderPlugins();
-      Marble::ExternalDrawPlugin* myPlugin = 0;
-      for (QList<Marble::RenderPlugin*>::const_iterator it = renderPlugins.constBegin(); it!=renderPlugins.constEnd(); ++it)
-      {
-        // TODO: find a stricter way to verify that it is the right plugin
-        // tried qobject_cast, but that did not work because we do not link to the plugin
-        if ((*it)->nameId()==EXTERNALDRAWPLUGIN_IDENTIFIER)
+        Marble::MarbleMap* const marbleMap = marbleWidget->map();
+        
+        // find the ExternalDraw plugin:
+        const QList<Marble::RenderPlugin*> renderPlugins = marbleMap->renderPlugins();
+        Marble::ExternalDrawPlugin* myPlugin = 0;
+        for (QList<Marble::RenderPlugin*>::const_iterator it = renderPlugins.constBegin(); it!=renderPlugins.constEnd(); ++it)
         {
-          myPlugin = reinterpret_cast<Marble::ExternalDrawPlugin*>(*it);
-          break;
+            // TODO: find a stricter way to verify that it is the right plugin
+            // tried qobject_cast, but that did not work because we do not link to the plugin
+            if ((*it)->nameId()==EXTERNALDRAWPLUGIN_IDENTIFIER)
+            {
+                myPlugin = reinterpret_cast<Marble::ExternalDrawPlugin*>(*it);
+                break;
+            }
         }
-      }
-      
-      return myPlugin;
+        
+        return myPlugin;
     }
     
     
@@ -126,4 +131,4 @@ private:
 
 }
 
-#endif // MARBLETESTPLUGIN_H
+#endif // EXTERNALDRAW_H
